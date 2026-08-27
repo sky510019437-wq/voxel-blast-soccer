@@ -338,15 +338,15 @@ function createPlayer(x, z, color, isAI = false) {
 }
 
 const ball = (() => {
-  const ballRadius = 0.55;
+  const ballRadius = 0.8;
   const ballGroup = new THREE.Group();
   
   const mainBall = new THREE.Mesh(
-    new THREE.SphereGeometry(ballRadius, 20, 20),
+    new THREE.SphereGeometry(ballRadius, 24, 24),
     new THREE.MeshLambertMaterial({ 
-      color: 0xffd700,
+      color: 0xffff00,
       emissive: 0xffaa00,
-      emissiveIntensity: 0.3
+      emissiveIntensity: 0.5
     })
   );
   mainBall.castShadow = true;
@@ -360,16 +360,16 @@ const ball = (() => {
     );
     const phi = Math.acos(-1 + (2 * i) / 12);
     const theta = Math.sqrt(12 * Math.PI) * phi;
-    panel.position.setFromSphericalCoords(ballRadius, phi, theta);
+    panel.position.setFromSphericalCoords(ballRadius * 1.01, phi, theta);
     panel.lookAt(0, 0, 0);
     ballGroup.add(panel);
   }
   
-  const glowGeometry = new THREE.SphereGeometry(ballRadius * 1.15, 16, 16);
+  const glowGeometry = new THREE.SphereGeometry(ballRadius * 1.3, 16, 16);
   const glowMaterial = new THREE.MeshBasicMaterial({
     color: 0xffff00,
     transparent: true,
-    opacity: 0.2,
+    opacity: 0.3,
     side: THREE.BackSide
   });
   const glow = new THREE.Mesh(glowGeometry, glowMaterial);
@@ -382,7 +382,7 @@ const ball = (() => {
     linearDamping: 0.1,
     angularDamping: 0.1
   });
-  physicsBody.position.set(0, 2, 0);
+  physicsBody.position.set(0, 3, 0);
   world.addBody(physicsBody);
   
   scene.add(ballGroup);
@@ -501,7 +501,7 @@ function kickBall() {
 }
 
 function resetBall() {
-  ball.body.position.set(0, 2, 0);
+  ball.body.position.set(0, 3, 0);
   ball.body.velocity.set(0, 0, 0);
   ball.body.angularVelocity.set(0, 0, 0);
   
