@@ -2,60 +2,30 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 
 const canvas = document.getElementById('canvas');
-
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a2e);
-scene.fog = new THREE.Fog(0x1a1a2e, 50, 200);
+scene.background = new THREE.Color(0x0a0a1a);
+scene.fog = new THREE.Fog(0x0a0a1a, 80, 150);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 25, 35);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 12, 18);
 
 const world = new CANNON.World();
-world.gravity.set(0, -30, 0);
+world.gravity.set(0, -25, 0);
 
-const VOXEL_SIZE = 0.4;
 const EPSILON = 0.001;
-
 const keys = {};
-let mouseAim = 0;
 let playerScore = 0;
 let aiScore = 0;
-let paused = false;
 let matchTime = 0;
-let gameStarted = false;
+let paused = false;
 
-window.addEventListener('keydown', (e) => { 
-  if (!gameStarted && (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space')) {
-    gameStarted = true;
-    document.getElementById('startHint').style.display = 'none';
-  }
-  keys[e.code] = true; 
-  if (e.code === 'KeyP') togglePause();
-});
-
-window.addEventListener('keyup', (e) => { 
-  keys[e.code] = false;
-});
-
-canvas.addEventListener('click', () => {
-  if (!gameStarted) {
-    gameStarted = true;
-    document.getElementById('startHint').style.display = 'none';
-  }
-  canvas.requestPointerLock();
-});
-
-canvas.addEventListener('mousemove', (e) => {
-  if (document.pointerLockElement === canvas && e.movementX) {
-    mouseAim += e.movementX * 0.005;
-  }
-});
-
+window.addEventListener('keydown', (e) => { keys[e.code] = true; if (e.code === 'KeyP') togglePause(); });
+window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -67,336 +37,310 @@ function togglePause() {
   document.getElementById('pause').textContent = paused ? '继续 (P)' : '暂停 (P)';
 }
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
-const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
-mainLight.position.set(30, 50, 30);
-mainLight.castShadow = true;
-mainLight.shadow.camera.left = -60;
-mainLight.shadow.camera.right = 60;
-mainLight.shadow.camera.top = 60;
-mainLight.shadow.camera.bottom = -60;
-mainLight.shadow.mapSize.width = 2048;
-mainLight.shadow.mapSize.height = 2048;
-scene.add(mainLight);
+const sunLight = new THREE.DirectionalLight(0xffe0b0, 1.5);
+sunLight.position.set(25, 40, 25);
+sunLight.castShadow = true;
+sunLight.shadow.camera.left = -50;
+sunLight.shadow.camera.right = 50;
+sunLight.shadow.camera.top = 50;
+sunLight.shadow.camera.bottom = -50;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+scene.add(sunLight);
 
-const fillLight = new THREE.DirectionalLight(0x4466ff, 0.3);
-fillLight.position.set(-30, 30, -30);
-scene.add(fillLight);
+const fillLight1 = new THREE.PointLight(0x88bbff, 0.8, 100);
+fillLight1.position.set(-30, 25, 0);
+scene.add(fillLight1);
 
-const voxelGeometry = new THREE.BoxGeometry(VOXEL_SIZE, VOXEL_SIZE, VOXEL_SIZE);
+const fillLight2 = new THREE.PointLight(0x88bbff, 0.8, 100);
+fillLight2.position.set(30, 25, 0);
+scene.add(fillLight2);
 
-function createPitch() {
-  const pitchGroup = new THREE.Group();
-  
-  const grassColors = [0x2d5016, 0x3a6b1f];
-  const pitchWidth = 70;
-  const pitchLength = 105;
-  const stripeWidth = 5;
-  
-  for (let x = -pitchWidth/2; x < pitchWidth/2; x += stripeWidth) {
-    const colorIndex = Math.floor((x + pitchWidth/2) / stripeWidth) % 2;
-    const stripe = new THREE.Mesh(
-      new THREE.PlaneGeometry(stripeWidth, pitchLength),
-      new THREE.MeshLambertMaterial({ color: grassColors[colorIndex] })
-    );
-    stripe.rotation.x = -Math.PI / 2;
-    stripe.position.set(x + stripeWidth/2, 0, 0);
-    stripe.receiveShadow = true;
-    pitchGroup.add(stripe);
-  }
-  
-  const lineMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  
-  function createLine(length, width, x, z, rotation = 0) {
-    const line = new THREE.Mesh(
-      new THREE.PlaneGeometry(length, width),
-      lineMaterial
-    );
-    line.rotation.x = -Math.PI / 2;
-    line.rotation.z = rotation;
-    line.position.set(x, 0.02, z);
-    pitchGroup.add(line);
-  }
-  
-  createLine(pitchWidth, 0.3, 0, pitchLength/2, 0);
-  createLine(pitchWidth, 0.3, 0, -pitchLength/2, 0);
-  createLine(0.3, pitchLength, pitchWidth/2, 0, 0);
-  createLine(0.3, pitchLength, -pitchWidth/2, 0, 0);
-  createLine(pitchWidth, 0.3, 0, 0, 0);
-  
-  const circleGeometry = new THREE.RingGeometry(9, 9.3, 64);
-  const circle = new THREE.Mesh(circleGeometry, lineMaterial);
-  circle.rotation.x = -Math.PI / 2;
-  circle.position.set(0, 0.02, 0);
-  pitchGroup.add(circle);
-  
-  function createPenaltyBox(z) {
-    const boxWidth = 40;
-    const boxDepth = 16;
-    createLine(boxWidth, 0.3, 0, z + (z > 0 ? boxDepth/2 : -boxDepth/2), 0);
-    createLine(0.3, boxDepth, boxWidth/2, z + (z > 0 ? boxDepth/4 : -boxDepth/4), 0);
-    createLine(0.3, boxDepth, -boxWidth/2, z + (z > 0 ? boxDepth/4 : -boxDepth/4), 0);
-  }
-  
-  createPenaltyBox(pitchLength/2);
-  createPenaltyBox(-pitchLength/2);
-  
-  const groundShape = new CANNON.Plane();
-  const groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
-  groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-  world.addBody(groundBody);
-  
-  scene.add(pitchGroup);
-  return pitchGroup;
+const groundMaterial = new CANNON.Material('ground');
+const groundBody = new CANNON.Body({ 
+  mass: 0, 
+  shape: new CANNON.Plane(),
+  material: groundMaterial
+});
+groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+world.addBody(groundBody);
+
+const pitchW = 60;
+const pitchL = 90;
+const pitchGroup = new THREE.Group();
+
+for (let z = 0; z < 18; z++) {
+  const isLight = z % 2 === 0;
+  const stripe = new THREE.Mesh(
+    new THREE.PlaneGeometry(pitchW, pitchL / 18),
+    new THREE.MeshLambertMaterial({ color: isLight ? 0x3a7d2f : 0x2d6123 })
+  );
+  stripe.rotation.x = -Math.PI / 2;
+  stripe.position.set(0, 0.01, -pitchL/2 + z * pitchL/18 + pitchL/36);
+  stripe.receiveShadow = true;
+  pitchGroup.add(stripe);
 }
 
-function createStadium() {
-  const stadiumGroup = new THREE.Group();
-  
-  const standMaterial = new THREE.MeshLambertMaterial({ color: 0x8b0000 });
-  const adColors = [0xff1744, 0x00e676, 0x2979ff, 0xffd600, 0xff6e40];
-  
-  function createStand(x, z, width, depth, height, destructible = false) {
-    const voxels = [];
-    const group = new THREE.Group();
-    
-    for (let i = 0; i < width; i++) {
-      for (let j = 0; j < height; j++) {
-        for (let k = 0; k < depth; k++) {
-          const voxel = new THREE.Mesh(voxelGeometry, standMaterial);
-          voxel.position.set(
-            x + i * VOXEL_SIZE,
-            j * VOXEL_SIZE + 0.2,
-            z + k * VOXEL_SIZE
-          );
-          voxel.castShadow = true;
-          group.add(voxel);
-          if (destructible) voxels.push(voxel);
-        }
-      }
-    }
-    
-    stadiumGroup.add(group);
-    return { group, voxels };
-  }
-  
-  function createAdBoard(x, z, width, height, destructible = true) {
-    const voxels = [];
-    const group = new THREE.Group();
-    const color = adColors[Math.floor(Math.random() * adColors.length)];
-    const material = new THREE.MeshLambertMaterial({ color });
-    
-    for (let i = 0; i < width; i++) {
-      for (let j = 0; j < height; j++) {
-        const voxel = new THREE.Mesh(voxelGeometry, material);
-        voxel.position.set(
-          x + i * VOXEL_SIZE - (width * VOXEL_SIZE) / 2,
-          j * VOXEL_SIZE + 0.2,
-          z
+const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+function addLine(w, l, x, z) {
+  const line = new THREE.Mesh(new THREE.PlaneGeometry(w, l), lineMat);
+  line.rotation.x = -Math.PI / 2;
+  line.position.set(x, 0.02, z);
+  pitchGroup.add(line);
+}
+
+addLine(pitchW, 0.2, 0, pitchL/2);
+addLine(pitchW, 0.2, 0, -pitchL/2);
+addLine(0.2, pitchL, -pitchW/2, 0);
+addLine(0.2, pitchL, pitchW/2, 0);
+addLine(pitchW, 0.2, 0, 0);
+
+const circleGeo = new THREE.RingGeometry(8, 8.2, 64);
+const circle = new THREE.Mesh(circleGeo, lineMat);
+circle.rotation.x = -Math.PI / 2;
+circle.position.set(0, 0.02, 0);
+pitchGroup.add(circle);
+
+scene.add(pitchGroup);
+
+const standMaterial = new THREE.MeshLambertMaterial({ color: 0x8b1a1a });
+const crowdColors = [0xff3333, 0x3333ff, 0xffff33, 0x33ff33, 0xff33ff];
+
+function createStand(x, y, z, w, h, d) {
+  const group = new THREE.Group();
+  for (let i = 0; i < w; i += 0.6) {
+    for (let j = 0; j < h; j += 0.6) {
+      for (let k = 0; k < d; k += 0.6) {
+        const isCrowd = Math.random() > 0.3 && j > 2;
+        const color = isCrowd ? crowdColors[Math.floor(Math.random() * crowdColors.length)] : 0x8b1a1a;
+        const cube = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.5, 0.5),
+          new THREE.MeshLambertMaterial({ color })
         );
-        voxel.castShadow = true;
-        group.add(voxel);
-        if (destructible) voxels.push(voxel);
+        cube.position.set(x + i, y + j, z + k);
+        cube.castShadow = true;
+        group.add(cube);
       }
     }
-    
-    stadiumGroup.add(group);
-    return { group, voxels };
+  }
+  scene.add(group);
+}
+
+createStand(-35, 0, -45, 10, 15, 3);
+createStand(25, 0, -45, 10, 15, 3);
+createStand(-35, 0, 42, 10, 15, 3);
+createStand(25, 0, 42, 10, 15, 3);
+
+createStand(-40, 0, -20, 3, 12, 30);
+createStand(37, 0, -20, 3, 12, 30);
+
+function createFloodlight(x, z) {
+  const pole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.4, 25, 8),
+    new THREE.MeshLambertMaterial({ color: 0x666666 })
+  );
+  pole.position.set(x, 12.5, z);
+  pole.castShadow = true;
+  scene.add(pole);
+  
+  const light = new THREE.PointLight(0xffffee, 1.2, 80);
+  light.position.set(x, 25, z);
+  light.castShadow = true;
+  scene.add(light);
+  
+  const lamp = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.5, 2),
+    new THREE.MeshBasicMaterial({ color: 0xffffaa, emissive: 0xffff00, emissiveIntensity: 0.8 })
+  );
+  lamp.position.set(x, 25, z);
+  scene.add(lamp);
+}
+
+createFloodlight(-35, -40);
+createFloodlight(35, -40);
+createFloodlight(-35, 40);
+createFloodlight(35, 40);
+
+const adBoards = [];
+function createAdBoard(x, z, w, h, color) {
+  const voxels = [];
+  const group = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color });
+  
+  for (let i = 0; i < w; i += 0.5) {
+    for (let j = 0; j < h; j += 0.5) {
+      const cube = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), mat);
+      cube.position.set(x + i - w/2, j + 0.25, z);
+      cube.castShadow = true;
+      group.add(cube);
+      voxels.push(cube);
+    }
   }
   
-  createStand(-40, -30, 20, 10, 25);
-  createStand(20, -30, 20, 10, 25);
-  createStand(-40, 20, 20, 10, 25);
-  createStand(20, 20, 20, 10, 25);
-  
-  const adBoards = [];
-  adBoards.push(createAdBoard(0, 40, 80, 8));
-  adBoards.push(createAdBoard(0, -40, 80, 8));
-  adBoards.push(createAdBoard(-38, 0, 60, 8));
-  adBoards.push(createAdBoard(38, 0, 60, 8));
-  
-  const wallShape = new CANNON.Box(new CANNON.Vec3(50, 5, 0.5));
-  const walls = [
-    { x: 0, y: 2.5, z: 42 },
-    { x: 0, y: 2.5, z: -42 },
-    { x: -40, y: 2.5, z: 0 },
-    { x: 40, y: 2.5, z: 0 }
-  ];
-  
-  walls.forEach(pos => {
-    const wallBody = new CANNON.Body({ mass: 0, shape: wallShape });
-    wallBody.position.set(pos.x, pos.y, pos.z);
-    if (Math.abs(pos.z) > 1) {
-      wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 0);
-    } else {
-      wallBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
-    }
-    world.addBody(wallBody);
-  });
-  
-  scene.add(stadiumGroup);
-  return { stadiumGroup, adBoards };
+  scene.add(group);
+  adBoards.push({ group, voxels, color });
 }
+
+createAdBoard(0, 48, 50, 3, 0xff1744);
+createAdBoard(0, -48, 50, 3, 0x2196f3);
+createAdBoard(-32, 0, 3, 3, 0xffc107);
+createAdBoard(32, 0, 3, 3, 0x4caf50);
 
 function createGoal(z) {
-  const goalGroup = new THREE.Group();
-  const postMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
-  const goalWidth = 7.32;
-  const goalHeight = 2.44;
+  const postMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const postGeo = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
   
-  function createPost(x, y, z, w, h, d) {
-    for (let i = 0; i < w; i++) {
-      for (let j = 0; j < h; j++) {
-        for (let k = 0; k < d; k++) {
-          const voxel = new THREE.Mesh(voxelGeometry, postMaterial);
-          voxel.position.set(
-            x + i * VOXEL_SIZE,
-            y + j * VOXEL_SIZE,
-            z + k * VOXEL_SIZE
-          );
-          voxel.castShadow = true;
-          goalGroup.add(voxel);
-        }
-      }
-    }
-  }
+  const leftPost = new THREE.Mesh(postGeo, postMat);
+  leftPost.position.set(-3.7, 1.25, z);
+  leftPost.castShadow = true;
+  scene.add(leftPost);
   
-  const postSize = 2;
-  createPost(-goalWidth/2, 0, z, postSize, goalHeight * 5, postSize);
-  createPost(goalWidth/2, 0, z, postSize, goalHeight * 5, postSize);
-  createPost(-goalWidth/2, goalHeight * 2, z, goalWidth * 2.5, postSize, postSize);
+  const rightPost = new THREE.Mesh(postGeo, postMat);
+  rightPost.position.set(3.7, 1.25, z);
+  rightPost.castShadow = true;
+  scene.add(rightPost);
   
-  const netGeometry = new THREE.PlaneGeometry(goalWidth, goalHeight * 2);
-  const netMaterial = new THREE.MeshBasicMaterial({ 
+  const crossbar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 7.5, 8),
+    postMat
+  );
+  crossbar.rotation.z = Math.PI / 2;
+  crossbar.position.set(0, 2.5, z);
+  crossbar.castShadow = true;
+  scene.add(crossbar);
+  
+  const netGeo = new THREE.PlaneGeometry(7.5, 2.5);
+  const netMat = new THREE.MeshBasicMaterial({ 
     color: 0xffffff, 
     transparent: true, 
     opacity: 0.3,
     side: THREE.DoubleSide
   });
-  const net = new THREE.Mesh(netGeometry, netMaterial);
-  net.position.set(0, goalHeight, z);
-  goalGroup.add(net);
+  const net = new THREE.Mesh(netGeo, netMat);
+  net.position.set(0, 1.25, z);
+  scene.add(net);
   
-  const goalShape = new CANNON.Box(new CANNON.Vec3(goalWidth/2, goalHeight, 0.5));
-  const goalBody = new CANNON.Body({ mass: 0, shape: goalShape, isTrigger: true });
-  goalBody.position.set(0, goalHeight, z);
+  const goalSensor = new CANNON.Box(new CANNON.Vec3(3.5, 1.25, 0.5));
+  const goalBody = new CANNON.Body({ mass: 0, shape: goalSensor, isTrigger: true });
+  goalBody.position.set(0, 1.25, z);
   goalBody.userData = { isGoal: z < 0 ? 'player' : 'ai' };
   world.addBody(goalBody);
-  
-  scene.add(goalGroup);
-  return goalGroup;
 }
 
-function createPlayer(x, z, color, isAI = false) {
+createGoal(-46);
+createGoal(46);
+
+function createPlayer(x, z, color, name) {
   const group = new THREE.Group();
-  const material = new THREE.MeshLambertMaterial({ color });
+  const mat = new THREE.MeshLambertMaterial({ color });
   
-  const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.2, 0.6), material);
-  body.position.y = 1.2;
-  body.castShadow = true;
-  group.add(body);
-  
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), material);
-  head.position.y = 2.1;
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), mat);
+  head.position.y = 1.8;
   head.castShadow = true;
   group.add(head);
   
-  const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), material);
-  leftLeg.position.set(-0.2, 0.4, 0);
-  leftLeg.castShadow = true;
-  group.add(leftLeg);
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.5), mat);
+  body.position.y = 1.0;
+  body.castShadow = true;
+  group.add(body);
   
-  const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.8, 0.3), material);
-  rightLeg.position.set(0.2, 0.4, 0);
-  rightLeg.castShadow = true;
-  group.add(rightLeg);
-  
-  const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), material);
-  leftArm.position.set(-0.6, 1.2, 0);
+  const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.8, 0.25), mat);
+  leftArm.position.set(-0.55, 1.0, 0);
   leftArm.castShadow = true;
   group.add(leftArm);
   
-  const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), material);
-  rightArm.position.set(0.6, 1.2, 0);
+  const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.8, 0.25), mat);
+  rightArm.position.set(0.55, 1.0, 0);
   rightArm.castShadow = true;
   group.add(rightArm);
   
-  const shape = new CANNON.Box(new CANNON.Vec3(0.5, 1.2, 0.4));
+  const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), mat);
+  leftLeg.position.set(-0.25, 0.45, 0);
+  leftLeg.castShadow = true;
+  group.add(leftLeg);
+  
+  const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.9, 0.3), mat);
+  rightLeg.position.set(0.25, 0.45, 0);
+  rightLeg.castShadow = true;
+  group.add(rightLeg);
+  
+  const shape = new CANNON.Box(new CANNON.Vec3(0.4, 1.0, 0.3));
   const physicsBody = new CANNON.Body({ 
-    mass: isAI ? 8 : 10, 
+    mass: 10, 
     shape,
     linearDamping: 0.1,
-    angularDamping: 0.99,
     fixedRotation: true
   });
-  physicsBody.position.set(x, 1.2, z);
+  physicsBody.position.set(x, 1.0, z);
   world.addBody(physicsBody);
   
   scene.add(group);
-  return { mesh: group, body: physicsBody, legs: { left: leftLeg, right: rightLeg } };
+  return { mesh: group, body: physicsBody, legs: { left: leftLeg, right: rightLeg }, name };
 }
 
-const ball = (() => {
-  const ballRadius = 1.0;
-  const ballGroup = new THREE.Group();
-  
-  const mainBall = new THREE.Mesh(
-    new THREE.SphereGeometry(ballRadius, 32, 32),
-    new THREE.MeshStandardMaterial({ 
-      color: 0xffff00,
-      emissive: 0xffff00,
-      emissiveIntensity: 0.8,
-      metalness: 0.1,
-      roughness: 0.3
-    })
+const playerTeam = [];
+const aiTeam = [];
+
+playerTeam.push(createPlayer(0, -30, 0xff1744, 'P1'));
+playerTeam.push(createPlayer(-8, -25, 0xff1744, 'P2'));
+playerTeam.push(createPlayer(8, -25, 0xff1744, 'P3'));
+
+aiTeam.push(createPlayer(0, 30, 0x2196f3, 'AI1'));
+aiTeam.push(createPlayer(-8, 25, 0x2196f3, 'AI2'));
+aiTeam.push(createPlayer(8, 25, 0x2196f3, 'AI3'));
+
+const mainPlayer = playerTeam[0];
+
+const ballRadius = 0.7;
+const ballMesh = new THREE.Group();
+
+const ballSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(ballRadius, 24, 24),
+  new THREE.MeshStandardMaterial({ 
+    color: 0xffffff,
+    metalness: 0.1,
+    roughness: 0.4
+  })
+);
+ballSphere.castShadow = true;
+ballMesh.add(ballSphere);
+
+for (let i = 0; i < 12; i++) {
+  const panel = new THREE.Mesh(
+    new THREE.CircleGeometry(ballRadius * 0.18, 5),
+    new THREE.MeshBasicMaterial({ color: 0x000000 })
   );
-  mainBall.castShadow = true;
-  ballGroup.add(mainBall);
-  
-  const indicatorGeometry = new THREE.ConeGeometry(0.5, 2, 8);
-  const indicatorMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-  const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
-  indicator.position.y = 3;
-  indicator.rotation.x = Math.PI;
-  ballGroup.add(indicator);
-  
-  const shape = new CANNON.Sphere(ballRadius);
-  const physicsBody = new CANNON.Body({ 
-    mass: 0.45,
-    shape,
-    linearDamping: 0.15,
-    angularDamping: 0.15
-  });
-  physicsBody.position.set(0, 5, 0);
-  world.addBody(physicsBody);
-  
-  ballGroup.position.copy(physicsBody.position);
-  scene.add(ballGroup);
-  
-  return { mesh: ballGroup, body: physicsBody, radius: ballRadius };
-})();
+  const phi = Math.acos(-1 + (2 * i) / 12);
+  const theta = Math.sqrt(12 * Math.PI) * phi;
+  panel.position.setFromSphericalCoords(ballRadius * 1.01, phi, theta);
+  panel.lookAt(0, 0, 0);
+  ballMesh.add(panel);
+}
 
-const player = createPlayer(0, -20, 0xff4444, false);
-const ai = createPlayer(0, 20, 0x2196f3, true);
-
-createPitch();
-const stadium = createStadium();
-createGoal(52);
-createGoal(-52);
+const ballBody = new CANNON.Body({ 
+  mass: 0.45, 
+  shape: new CANNON.Sphere(ballRadius),
+  linearDamping: 0.05,
+  angularDamping: 0.05
+});
+ballBody.position.set(0, ballRadius + 0.5, 0);
+world.addBody(ballBody);
+scene.add(ballMesh);
 
 const debris = [];
-const MAX_DEBRIS = 150;
+const MAX_DEBRIS = 100;
 
-function createDebris(position, color, velocity) {
+function createDebris(pos, color, vel) {
   if (debris.length >= MAX_DEBRIS) {
     const old = debris.shift();
     scene.remove(old.mesh);
     world.removeBody(old.body);
   }
   
-  const size = VOXEL_SIZE * (0.7 + Math.random() * 0.3);
+  const size = 0.3 + Math.random() * 0.2;
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(size, size, size),
     new THREE.MeshLambertMaterial({ color })
@@ -404,216 +348,175 @@ function createDebris(position, color, velocity) {
   mesh.castShadow = true;
   
   const shape = new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2));
-  const physicsBody = new CANNON.Body({ mass: 0.3, shape });
-  physicsBody.position.copy(position);
-  physicsBody.velocity.set(
-    velocity.x + (Math.random() - 0.5) * 8,
-    velocity.y + Math.random() * 12,
-    velocity.z + (Math.random() - 0.5) * 8
+  const body = new CANNON.Body({ mass: 0.2, shape });
+  body.position.copy(pos);
+  body.velocity.set(
+    vel.x * 0.5 + (Math.random() - 0.5) * 5,
+    Math.random() * 8 + 3,
+    vel.z * 0.5 + (Math.random() - 0.5) * 5
   );
-  physicsBody.angularVelocity.set(
-    (Math.random() - 0.5) * 15,
-    (Math.random() - 0.5) * 15,
-    (Math.random() - 0.5) * 15
+  body.angularVelocity.set(
+    (Math.random() - 0.5) * 10,
+    (Math.random() - 0.5) * 10,
+    (Math.random() - 0.5) * 10
   );
   
-  world.addBody(physicsBody);
+  world.addBody(body);
   scene.add(mesh);
-  debris.push({ mesh, body: physicsBody, life: 200 });
+  debris.push({ mesh, body, life: 180 });
 }
 
-function checkVoxelCollisions() {
-  const ballVel = ball.body.velocity.length();
-  if (ballVel < 10) return;
+function checkCollisions() {
+  if (ballBody.velocity.length() < 8) return;
   
-  stadium.adBoards.forEach(board => {
+  adBoards.forEach(board => {
     board.voxels.forEach(voxel => {
       if (!voxel.parent) return;
-      const worldPos = new THREE.Vector3();
-      voxel.getWorldPosition(worldPos);
-      const dist = worldPos.distanceTo(new THREE.Vector3(
-        ball.body.position.x,
-        ball.body.position.y,
-        ball.body.position.z
-      ));
-      
-      if (dist < ball.radius + VOXEL_SIZE) {
+      const pos = new THREE.Vector3();
+      voxel.getWorldPosition(pos);
+      const dist = pos.distanceTo(new THREE.Vector3(ballBody.position.x, ballBody.position.y, ballBody.position.z));
+      if (dist < ballRadius + 0.5) {
         board.group.remove(voxel);
-        createDebris(worldPos, voxel.material.color, ball.body.velocity);
+        createDebris(pos, board.color, ballBody.velocity);
+        playSound('break');
       }
     });
   });
 }
 
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function playSound(type, volume = 0.5) {
-  const oscillator = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  oscillator.connect(gainNode);
-  gainNode.connect(audioContext.destination);
+function playSound(type) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
   
-  switch(type) {
-    case 'kick':
-      oscillator.frequency.setValueAtTime(180, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(60, audioContext.currentTime + 0.15);
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-      break;
-    case 'goal':
-      oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.4);
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-      break;
+  if (type === 'kick') {
+    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+  } else if (type === 'goal') {
+    osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+  } else if (type === 'break') {
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
   }
   
-  oscillator.start(audioContext.currentTime);
-  oscillator.stop(audioContext.currentTime + 0.5);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.5);
 }
 
-function kickBall() {
-  if (paused) return;
-  
-  const dx = ball.body.position.x - player.body.position.x;
-  const dz = ball.body.position.z - player.body.position.z;
+function kickBall(player, power = 28) {
+  const dx = ballBody.position.x - player.body.position.x;
+  const dz = ballBody.position.z - player.body.position.z;
   const dist = Math.sqrt(dx * dx + dz * dz);
   
-  if (dist < 3 && dist > EPSILON) {
-    const aimX = Math.sin(mouseAim);
-    const aimZ = Math.cos(mouseAim);
-    const power = keys['ShiftLeft'] || keys['ShiftRight'] ? 15 : 30;
-    
-    ball.body.velocity.set(aimX * power, 6, aimZ * power);
-    playSound('kick', 0.7);
+  if (dist < 2.5 && dist > EPSILON) {
+    ballBody.velocity.set((dx / dist) * power, 6, (dz / dist) * power);
+    playSound('kick');
   }
 }
 
-function resetBall() {
-  ball.body.position.set(0, 5, 0);
-  ball.body.velocity.set(0, 0, 0);
-  ball.body.angularVelocity.set(0, 0, 0);
+function resetMatch() {
+  ballBody.position.set(0, ballRadius + 0.5, 0);
+  ballBody.velocity.set(0, 0, 0);
+  ballBody.angularVelocity.set(0, 0, 0);
   
-  player.body.position.set(0, 1.2, -20);
-  player.body.velocity.set(0, 0, 0);
+  playerTeam[0].body.position.set(0, 1, -30);
+  playerTeam[1].body.position.set(-8, 1, -25);
+  playerTeam[2].body.position.set(8, 1, -25);
   
-  ai.body.position.set(0, 1.2, 20);
-  ai.body.velocity.set(0, 0, 0);
+  aiTeam[0].body.position.set(0, 1, 30);
+  aiTeam[1].body.position.set(-8, 1, 25);
+  aiTeam[2].body.position.set(8, 1, 25);
+  
+  playerTeam.forEach(p => { p.body.velocity.set(0,0,0); });
+  aiTeam.forEach(a => { a.body.velocity.set(0,0,0); });
 }
 
-function showMessage(text, duration = 2000) {
+function showMessage(text) {
   const msg = document.getElementById('message');
   msg.innerHTML = text;
   msg.classList.add('show');
-  setTimeout(() => msg.classList.remove('show'), duration);
+  setTimeout(() => msg.classList.remove('show'), 2500);
 }
 
-function checkGoal() {
-  if (ball.body.position.z < -50 && Math.abs(ball.body.position.x) < 4) {
+function checkGoals() {
+  if (ballBody.position.z < -44 && Math.abs(ballBody.position.x) < 4) {
     aiScore++;
     document.getElementById('aiScore').textContent = aiScore;
-    showMessage('<span class="goal-text">AI 进球!</span>');
-    playSound('goal', 0.9);
-    setTimeout(resetBall, 2000);
-  }
-  else if (ball.body.position.z > 50 && Math.abs(ball.body.position.x) < 4) {
+    showMessage('AI进球!');
+    playSound('goal');
+    setTimeout(resetMatch, 2500);
+  } else if (ballBody.position.z > 44 && Math.abs(ballBody.position.x) < 4) {
     playerScore++;
     document.getElementById('playerScore').textContent = playerScore;
-    showMessage('<span class="goal-text">玩家进球! ⚽</span>');
-    playSound('goal', 0.9);
-    setTimeout(resetBall, 2000);
+    showMessage('进球得分! ⚽');
+    playSound('goal');
+    setTimeout(resetMatch, 2500);
   }
 }
 
-function updatePlayer(delta) {
-  const speed = 300;
+function updatePlayerControl(player, delta) {
+  const speed = 400;
   const force = new CANNON.Vec3();
   let moving = false;
   
-  if (keys['KeyW'] || keys['ArrowUp']) { 
-    force.z -= speed; 
-    moving = true;
+  if (keys['KeyW'] || keys['ArrowUp']) { force.z -= speed; moving = true; }
+  if (keys['KeyS'] || keys['ArrowDown']) { force.z += speed; moving = true; }
+  if (keys['KeyA'] || keys['ArrowLeft']) { force.x -= speed; moving = true; }
+  if (keys['KeyD'] || keys['ArrowRight']) { force.x += speed; moving = true; }
+  
+  if (force.length() > EPSILON) {
+    player.body.applyForce(force);
+    player.mesh.rotation.y = Math.atan2(force.x, -force.z);
   }
-  if (keys['KeyS'] || keys['ArrowDown']) { 
-    force.z += speed; 
-    moving = true;
-  }
-  if (keys['KeyA'] || keys['ArrowLeft']) { 
-    force.x -= speed; 
-    moving = true;
-  }
-  if (keys['KeyD'] || keys['ArrowRight']) { 
-    force.x += speed; 
-    moving = true;
-  }
+  
   if (keys['Space']) {
-    kickBall();
+    kickBall(player, keys['ShiftLeft'] || keys['ShiftRight'] ? 18 : 32);
+  }
+  
+  player.body.position.x = Math.max(-28, Math.min(28, player.body.position.x));
+  player.body.position.z = Math.max(-44, Math.min(44, player.body.position.z));
+  
+  if (moving) {
+    const swing = Math.sin(Date.now() * 0.015) * 0.4;
+    player.legs.left.rotation.x = swing;
+    player.legs.right.rotation.x = -swing;
+  }
+}
+
+function updateAI(player, delta) {
+  const toBallX = ballBody.position.x - player.body.position.x;
+  const toBallZ = ballBody.position.z - player.body.position.z;
+  const dist = Math.sqrt(toBallX * toBallX + toBallZ * toBallZ);
+  
+  const speed = 200;
+  const force = new CANNON.Vec3();
+  
+  if (ballBody.position.z > 10 && dist > EPSILON) {
+    force.x = (toBallX / dist) * speed;
+    force.z = (toBallZ / dist) * speed;
   }
   
   if (force.length() > EPSILON) {
     player.body.applyForce(force);
-    mouseAim = Math.atan2(force.x, -force.z);
+    player.mesh.rotation.y = Math.atan2(force.x, -force.z);
   }
   
-  player.body.position.x = Math.max(-34, Math.min(34, player.body.position.x));
-  player.body.position.z = Math.max(-50, Math.min(50, player.body.position.z));
-  
-  if (!isNaN(mouseAim)) {
-    player.mesh.rotation.y = mouseAim;
+  if (dist < 2.5 && dist > EPSILON && ballBody.position.z > 15) {
+    kickBall(player, 25);
   }
   
-  if (moving) {
-    const legSwing = Math.sin(Date.now() * 0.01) * 0.3;
-    player.legs.left.rotation.x = legSwing;
-    player.legs.right.rotation.x = -legSwing;
-  }
-}
-
-function updateAI(delta) {
-  const toBallX = ball.body.position.x - ai.body.position.x;
-  const toBallZ = ball.body.position.z - ai.body.position.z;
-  const distToBall = Math.sqrt(toBallX * toBallX + toBallZ * toBallZ);
-  
-  const speed = 150;
-  const force = new CANNON.Vec3();
-  
-  if (ball.body.position.z > 10) {
-    if (distToBall > EPSILON) {
-      force.x = (toBallX / distToBall) * speed;
-      force.z = (toBallZ / distToBall) * speed;
-    }
-  } else {
-    const toHomeX = 0 - ai.body.position.x;
-    const toHomeZ = 25 - ai.body.position.z;
-    const distToHome = Math.sqrt(toHomeX * toHomeX + toHomeZ * toHomeZ);
-    if (distToHome > EPSILON) {
-      force.x = (toHomeX / distToHome) * speed * 0.6;
-      force.z = (toHomeZ / distToHome) * speed * 0.6;
-    }
-  }
-  
-  ai.body.applyForce(force);
-  
-  if (distToBall < 3 && distToBall > EPSILON && ball.body.position.z > 10) {
-    const toGoalX = 0 - ball.body.position.x;
-    const toGoalZ = -52 - ball.body.position.z;
-    const distToGoal = Math.sqrt(toGoalX * toGoalX + toGoalZ * toGoalZ);
-    if (distToGoal > EPSILON) {
-      ball.body.velocity.set(
-        (toGoalX / distToGoal) * 25,
-        5,
-        (toGoalZ / distToGoal) * 25
-      );
-      playSound('kick', 0.5);
-    }
-  }
-  
-  ai.body.position.x = Math.max(-34, Math.min(34, ai.body.position.x));
-  ai.body.position.z = Math.max(-50, Math.min(50, ai.body.position.z));
-  
-  if (force.length() > EPSILON) {
-    ai.mesh.rotation.y = Math.atan2(force.x, -force.z);
-  }
+  player.body.position.x = Math.max(-28, Math.min(28, player.body.position.x));
+  player.body.position.z = Math.max(-44, Math.min(44, player.body.position.z));
 }
 
 const clock = new THREE.Clock();
@@ -621,22 +524,26 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   
-  if (!paused && gameStarted) {
+  if (!paused) {
     const delta = Math.min(clock.getDelta(), 0.033);
     matchTime += delta;
     
-    world.step(1 / 60, delta, 3);
+    world.step(1/60, delta, 3);
     
-    updatePlayer(delta);
-    updateAI(delta);
-    checkVoxelCollisions();
-    checkGoal();
+    updatePlayerControl(mainPlayer, delta);
     
-    ball.mesh.position.copy(ball.body.position);
-    ball.mesh.quaternion.copy(ball.body.quaternion);
+    playerTeam.slice(1).forEach(p => updateAI(p, delta));
+    aiTeam.forEach(a => updateAI(a, delta));
     
-    player.mesh.position.copy(player.body.position);
-    ai.mesh.position.copy(ai.body.position);
+    checkCollisions();
+    checkGoals();
+    
+    ballMesh.position.copy(ballBody.position);
+    ballMesh.quaternion.copy(ballBody.quaternion);
+    
+    [...playerTeam, ...aiTeam].forEach(p => {
+      p.mesh.position.copy(p.body.position);
+    });
     
     debris.forEach((d, i) => {
       d.mesh.position.copy(d.body.position);
@@ -649,23 +556,21 @@ function animate() {
       }
     });
     
-    const targetX = player.body.position.x * 0.4;
-    const targetY = 25;
-    const targetZ = player.body.position.z + 20;
-    const lookX = player.body.position.x * 0.5;
-    const lookZ = player.body.position.z - 10;
+    const targetX = mainPlayer.body.position.x * 0.3;
+    const targetY = 15;
+    const targetZ = mainPlayer.body.position.z + 18;
+    const lookX = mainPlayer.body.position.x * 0.6;
+    const lookY = 1;
+    const lookZ = mainPlayer.body.position.z - 8;
     
-    camera.position.x += (targetX - camera.position.x) * 0.05;
-    camera.position.y += (targetY - camera.position.y) * 0.05;
-    camera.position.z += (targetZ - camera.position.z) * 0.05;
-    camera.lookAt(lookX, 2, lookZ);
+    camera.position.x += (targetX - camera.position.x) * 0.08;
+    camera.position.y += (targetY - camera.position.y) * 0.08;
+    camera.position.z += (targetZ - camera.position.z) * 0.08;
+    camera.lookAt(lookX, lookY, lookZ);
     
-    const minutes = Math.floor(matchTime / 60);
-    const seconds = Math.floor(matchTime % 60);
-    document.getElementById('time').textContent = 
-      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  } else if (gameStarted) {
-    clock.getDelta();
+    const mins = Math.floor(matchTime / 60);
+    const secs = Math.floor(matchTime % 60);
+    document.getElementById('time').textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
   }
   
   renderer.render(scene, camera);
