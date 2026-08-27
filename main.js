@@ -24,24 +24,20 @@ let aiScore = 0;
 let matchTime = 0;
 let paused = false;
 
-document.addEventListener('DOMContentLoaded', () => {
-  canvas.focus();
-});
-
-canvas.addEventListener('click', () => {
-  canvas.focus();
-});
-
-document.addEventListener('keydown', (e) => { 
+window.addEventListener('keydown', (e) => { 
   keys[e.code] = true;
   if (e.code === 'KeyP') togglePause();
-  e.preventDefault();
-});
+  if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
+    e.preventDefault();
+  }
+}, { passive: false });
 
-document.addEventListener('keyup', (e) => { 
+window.addEventListener('keyup', (e) => { 
   keys[e.code] = false;
-  e.preventDefault();
-});
+  if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
+    e.preventDefault();
+  }
+}, { passive: false });
 window.addEventListener('keydown', (e) => console.log('Key pressed:', e.code, e.key));
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
