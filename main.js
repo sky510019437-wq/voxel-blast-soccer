@@ -338,54 +338,42 @@ function createPlayer(x, z, color, isAI = false) {
 }
 
 const ball = (() => {
-  const ballRadius = 0.8;
+  const ballRadius = 1.0;
   const ballGroup = new THREE.Group();
   
   const mainBall = new THREE.Mesh(
-    new THREE.SphereGeometry(ballRadius, 24, 24),
-    new THREE.MeshLambertMaterial({ 
+    new THREE.SphereGeometry(ballRadius, 32, 32),
+    new THREE.MeshStandardMaterial({ 
       color: 0xffff00,
-      emissive: 0xffaa00,
-      emissiveIntensity: 0.5
+      emissive: 0xffff00,
+      emissiveIntensity: 0.8,
+      metalness: 0.1,
+      roughness: 0.3
     })
   );
   mainBall.castShadow = true;
   ballGroup.add(mainBall);
   
-  const panelMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
-  for (let i = 0; i < 12; i++) {
-    const panel = new THREE.Mesh(
-      new THREE.CircleGeometry(ballRadius * 0.25, 5),
-      panelMaterial
-    );
-    const phi = Math.acos(-1 + (2 * i) / 12);
-    const theta = Math.sqrt(12 * Math.PI) * phi;
-    panel.position.setFromSphericalCoords(ballRadius * 1.01, phi, theta);
-    panel.lookAt(0, 0, 0);
-    ballGroup.add(panel);
-  }
-  
-  const glowGeometry = new THREE.SphereGeometry(ballRadius * 1.3, 16, 16);
-  const glowMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffff00,
-    transparent: true,
-    opacity: 0.3,
-    side: THREE.BackSide
-  });
-  const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-  ballGroup.add(glow);
+  const indicatorGeometry = new THREE.ConeGeometry(0.5, 2, 8);
+  const indicatorMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+  const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+  indicator.position.y = 3;
+  indicator.rotation.x = Math.PI;
+  ballGroup.add(indicator);
   
   const shape = new CANNON.Sphere(ballRadius);
   const physicsBody = new CANNON.Body({ 
     mass: 0.45,
     shape,
-    linearDamping: 0.1,
-    angularDamping: 0.1
+    linearDamping: 0.15,
+    angularDamping: 0.15
   });
-  physicsBody.position.set(0, 3, 0);
+  physicsBody.position.set(0, 5, 0);
   world.addBody(physicsBody);
   
+  ballGroup.position.copy(physicsBody.position);
   scene.add(ballGroup);
+  
   return { mesh: ballGroup, body: physicsBody, radius: ballRadius };
 })();
 
@@ -501,7 +489,7 @@ function kickBall() {
 }
 
 function resetBall() {
-  ball.body.position.set(0, 3, 0);
+  ball.body.position.set(0, 5, 0);
   ball.body.velocity.set(0, 0, 0);
   ball.body.angularVelocity.set(0, 0, 0);
   
