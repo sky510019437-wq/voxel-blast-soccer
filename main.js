@@ -24,8 +24,25 @@ let aiScore = 0;
 let matchTime = 0;
 let paused = false;
 
-window.addEventListener('keydown', (e) => { keys[e.code] = true; if (e.code === 'KeyP') togglePause(); });
-window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+document.addEventListener('DOMContentLoaded', () => {
+  canvas.focus();
+});
+
+canvas.addEventListener('click', () => {
+  canvas.focus();
+});
+
+document.addEventListener('keydown', (e) => { 
+  keys[e.code] = true;
+  if (e.code === 'KeyP') togglePause();
+  e.preventDefault();
+});
+
+document.addEventListener('keyup', (e) => { 
+  keys[e.code] = false;
+  e.preventDefault();
+});
+window.addEventListener('keydown', (e) => console.log('Key pressed:', e.code, e.key));
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -402,8 +419,9 @@ function kickBall(player, power = 28) {
   const dx = ballBody.position.x - player.body.position.x;
   const dz = ballBody.position.z - player.body.position.z;
   const dist = Math.sqrt(dx * dx + dz * dz);
+  console.log("Kick attempt - dist:", dist, "player:", player.body.position.x, player.body.position.z, "ball:", ballBody.position.x, ballBody.position.z);
   
-  if (dist < 2.5 && dist > EPSILON) {
+  if (dist < 5.0 && dist > EPSILON) {
     ballBody.velocity.set((dx / dist) * power, 6, (dz / dist) * power);
     playSound('kick');
   }
@@ -464,6 +482,7 @@ function updatePlayerControl(player, delta) {
     player.mesh.rotation.y = Math.atan2(force.x, -force.z);
   }
   
+  console.log("Space key check:", keys["Space"], "keys object:", Object.keys(keys).filter(k => keys[k]));
   if (keys['Space']) {
     kickBall(player, keys['ShiftLeft'] || keys['ShiftRight'] ? 18 : 32);
   }
