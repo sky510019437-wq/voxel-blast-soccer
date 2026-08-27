@@ -326,7 +326,7 @@ function createPlayer(x, z, color, isAI = false) {
   const physicsBody = new CANNON.Body({ 
     mass: isAI ? 8 : 10, 
     shape,
-    linearDamping: 0.5,
+    linearDamping: 0.1,
     angularDamping: 0.99,
     fixedRotation: true
   });
@@ -537,7 +537,7 @@ function checkGoal() {
 }
 
 function updatePlayer(delta) {
-  const speed = 200;
+  const speed = 300;
   const force = new CANNON.Vec3();
   let moving = false;
   
@@ -585,7 +585,7 @@ function updateAI(delta) {
   const toBallZ = ball.body.position.z - ai.body.position.z;
   const distToBall = Math.sqrt(toBallX * toBallX + toBallZ * toBallZ);
   
-  const speed = 100;
+  const speed = 150;
   const force = new CANNON.Vec3();
   
   if (ball.body.position.z > 10) {
