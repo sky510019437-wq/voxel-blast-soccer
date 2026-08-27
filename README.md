@@ -77,13 +77,26 @@ The dev server will start at `http://localhost:5173/`
 
 This project is configured for automatic deployment to GitHub Pages. Every push to the `main` branch triggers a build and deploy.
 
-### Setup GitHub Pages
+### ⚠️ REQUIRED: Enable GitHub Pages First
+
+**Before the workflow can deploy, you MUST enable GitHub Pages:**
 
 1. Go to your repository **Settings** → **Pages**
-2. Under **Source**, select **GitHub Actions**
-3. Push to `main` branch - the workflow will automatically build and deploy
+   - Direct link: https://github.com/sky510019437-wq/voxel-blast-soccer/settings/pages
+2. Under **Source**, select **GitHub Actions** (not "Deploy from a branch")
+3. Save the settings
+4. The next push to `main` will automatically build and deploy
 
-The game will be available at: `https://sky510019437-wq.github.io/voxel-blast-soccer/`
+**After enabling Pages, the game will be available at:**
+`https://sky510019437-wq.github.io/voxel-blast-soccer/`
+
+### Current Status
+
+✅ Code is ready  
+✅ Build workflow is configured  
+⏳ Waiting for GitHub Pages to be enabled in repository settings
+
+Once Pages is enabled, the game will deploy automatically on the next commit or you can manually trigger the workflow from the Actions tab.
 
 ## Architecture
 
