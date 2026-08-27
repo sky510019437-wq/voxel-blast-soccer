@@ -49,7 +49,8 @@ function updateKeyIndicator() {
   const pressed = Object.keys(keys).filter(k => keys[k]);
   const indicator = document.getElementById('keyIndicator');
   if (indicator) {
-    indicator.textContent = pressed.length > 0 ? `按键: ${pressed.join(' ')}` : '';
+    const pos = mainPlayer ? `[Z:${mainPlayer.body.position.z.toFixed(1)}]` : '';
+    indicator.textContent = pressed.length > 0 ? `按键: ${pressed.join(' ')} ${pos}` : '';
   }
 }
 
@@ -482,7 +483,7 @@ function checkGoals() {
 function updatePlayerControl(player, delta) {
   if (!player || !player.body) return;
   
-  const speed = 80;
+  const speed = 200;
   let moving = false;
   
   if (keys['KeyW'] || keys['ArrowUp']) { 
