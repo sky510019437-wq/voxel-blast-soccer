@@ -93,12 +93,16 @@
 <body>
   <canvas id="canvas"></canvas>
   <div id="ui">
-    <div id="score">玩家 <span id="playerScore">0</span> : <span id="aiScore">0</span> AI</div>
+    <div id="score">
+      <span id="playerScore">0</span> : <span id="aiScore">0</span>
+      <div style="font-size: 16px; margin-top: 5px;"><span id="time">00:00</span></div>
+    </div>
     <div id="controls">
-      <strong>操作说明:</strong><br>
-      WASD / 方向键 - 移动<br>
-      空格 / 点击 - 踢球<br>
-      鼠标 - 转向
+      <strong>点击画面开始</strong><br>
+      WASD / 方向键 - 冲刺<br>
+      空格 / 左键 - 大力射门<br>
+      Shift - 传球<br>
+      鼠标移动 - 瞄准方向
     </div>
     <div id="pause">暂停 (P)</div>
     <div id="message"></div>
