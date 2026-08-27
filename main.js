@@ -284,9 +284,9 @@ function createPlayer(x, z, color, name) {
 const playerTeam = [];
 const aiTeam = [];
 
-playerTeam.push(createPlayer(0, -30, 0xff1744, 'P1'));
-playerTeam.push(createPlayer(-8, -25, 0xff1744, 'P2'));
-playerTeam.push(createPlayer(8, -25, 0xff1744, 'P3'));
+playerTeam.push(createPlayer(0, -8, 0xff1744, 'P1'));
+playerTeam.push(createPlayer(-8, -15, 0xff1744, 'P2'));
+playerTeam.push(createPlayer(8, -15, 0xff1744, 'P3'));
 
 aiTeam.push(createPlayer(0, 30, 0x2196f3, 'AI1'));
 aiTeam.push(createPlayer(-8, 25, 0x2196f3, 'AI2'));
