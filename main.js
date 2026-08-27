@@ -289,7 +289,7 @@ function createPlayer(x, z, color, name) {
   const physicsBody = new CANNON.Body({ 
     mass: 10, 
     shape,
-    linearDamping: 0.1,
+    linearDamping: 0.01,
     fixedRotation: true
   });
   physicsBody.position.set(x, 1.0, z);
@@ -474,7 +474,7 @@ function updatePlayerControl(player, delta) {
     return;
   }
   
-  const speed = 12;
+  const speed = 25;
   let moving = false;
   
   console.log('updatePlayerControl - Before:', {
