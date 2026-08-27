@@ -11,8 +11,8 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a1a);
-scene.fog = new THREE.Fog(0x0a0a1a, 80, 150);
+scene.background = new THREE.Color(0x87ceeb);
+scene.fog = new THREE.Fog(0x87ceeb, 200, 400);
 
 const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 12, 18);
@@ -56,11 +56,11 @@ function togglePause() {
   document.getElementById('pause').textContent = paused ? '继续 (P)' : '暂停 (P)';
 }
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xffe0b0, 1.5);
-sunLight.position.set(25, 40, 25);
+const sunLight = new THREE.DirectionalLight(0xffffee, 1.8);
+sunLight.position.set(25, 50, 25);
 sunLight.castShadow = true;
 sunLight.shadow.camera.left = -50;
 sunLight.shadow.camera.right = 50;
@@ -472,7 +472,7 @@ function checkGoals() {
 function updatePlayerControl(player, delta) {
   if (!player || !player.body) return;
   
-  const speed = 200;
+  const speed = 35;
   let moving = false;
   
   if (keys['KeyW'] || keys['ArrowUp']) { 
