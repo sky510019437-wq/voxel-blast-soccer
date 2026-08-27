@@ -2,9 +2,6 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 
 const canvas = document.getElementById('canvas');
-canvas.setAttribute('tabindex', '0');
-canvas.focus();
-
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -48,8 +45,6 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
-
-canvas.addEventListener('click', () => canvas.focus());
 
 function togglePause() {
   paused = !paused;
@@ -548,8 +543,9 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   
+  const delta = Math.min(clock.getDelta(), 0.033);
+  
   if (!paused) {
-    const delta = Math.min(clock.getDelta(), 0.033);
     matchTime += delta;
     
     world.step(1/60, delta, 3);
@@ -561,41 +557,41 @@ function animate() {
     
     checkCollisions();
     checkGoals();
-    
-    ballMesh.position.copy(ballBody.position);
-    ballMesh.quaternion.copy(ballBody.quaternion);
-    
-    [...playerTeam, ...aiTeam].forEach(p => {
-      p.mesh.position.copy(p.body.position);
-    });
-    
-    debris.forEach((d, i) => {
-      d.mesh.position.copy(d.body.position);
-      d.mesh.quaternion.copy(d.body.quaternion);
-      d.life--;
-      if (d.life <= 0) {
-        scene.remove(d.mesh);
-        world.removeBody(d.body);
-        debris.splice(i, 1);
-      }
-    });
-    
-    const targetX = mainPlayer.body.position.x * 0.3;
-    const targetY = 15;
-    const targetZ = mainPlayer.body.position.z + 18;
-    const lookX = mainPlayer.body.position.x * 0.6;
-    const lookY = 1;
-    const lookZ = mainPlayer.body.position.z - 8;
-    
-    camera.position.x += (targetX - camera.position.x) * 0.08;
-    camera.position.y += (targetY - camera.position.y) * 0.08;
-    camera.position.z += (targetZ - camera.position.z) * 0.08;
-    camera.lookAt(lookX, lookY, lookZ);
-    
-    const mins = Math.floor(matchTime / 60);
-    const secs = Math.floor(matchTime % 60);
-    document.getElementById('time').textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
   }
+  
+  ballMesh.position.copy(ballBody.position);
+  ballMesh.quaternion.copy(ballBody.quaternion);
+  
+  [...playerTeam, ...aiTeam].forEach(p => {
+    p.mesh.position.copy(p.body.position);
+  });
+  
+  debris.forEach((d, i) => {
+    d.mesh.position.copy(d.body.position);
+    d.mesh.quaternion.copy(d.body.quaternion);
+    d.life--;
+    if (d.life <= 0) {
+      scene.remove(d.mesh);
+      world.removeBody(d.body);
+      debris.splice(i, 1);
+    }
+  });
+  
+  const targetX = mainPlayer.body.position.x * 0.3;
+  const targetY = 15;
+  const targetZ = mainPlayer.body.position.z + 18;
+  const lookX = mainPlayer.body.position.x * 0.6;
+  const lookY = 1;
+  const lookZ = mainPlayer.body.position.z - 8;
+  
+  camera.position.x += (targetX - camera.position.x) * 0.08;
+  camera.position.y += (targetY - camera.position.y) * 0.08;
+  camera.position.z += (targetZ - camera.position.z) * 0.08;
+  camera.lookAt(lookX, lookY, lookZ);
+  
+  const mins = Math.floor(matchTime / 60);
+  const secs = Math.floor(matchTime % 60);
+  document.getElementById('time').textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
   
   renderer.render(scene, camera);
 }

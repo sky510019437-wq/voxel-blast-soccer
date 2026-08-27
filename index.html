@@ -97,14 +97,10 @@
       <span id="playerScore">0</span> : <span id="aiScore">0</span>
       <div style="font-size: 16px; margin-top: 5px;"><span id="time">00:00</span></div>
     </div>
-    <div id="controls">
-      <strong style="color: #ffdd00;">👆 点击画面开始游戏</strong><br>
-      WASD - 移动<br>
-      空格 - 射门<br>
-      Shift+空格 - 传球<br>
-      P - 暂停
+    <div id="controls" style="pointer-events: none;">
+      <strong style="color: #ffdd00;">WASD移动 空格射门 P暂停</strong><br>
     </div>
-    <div id="pause">暂停 (P)</div>
+    <div id="pause" style="pointer-events: auto;">暂停 (P)</div>
     <div id="message"></div>
   </div>
   <script type="module" src="/main.js"></script>
