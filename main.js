@@ -25,8 +25,9 @@ let matchTime = 0;
 let paused = false;
 
 window.addEventListener('keydown', (e) => {
-  console.log('Key down:', e.code);
+  console.log('Key down:', e.code, '- Setting keys[' + e.code + '] = true');
   keys[e.code] = true;
+  console.log('Keys object after set:', JSON.stringify(keys));
   if (e.code === 'KeyP') togglePause();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
@@ -40,7 +41,7 @@ window.addEventListener('keyup', (e) => {
     e.preventDefault();
   }
 }, { passive: false });
-window.addEventListener('keydown', (e) => console.log('Key pressed:', e.code, e.key));
+
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
