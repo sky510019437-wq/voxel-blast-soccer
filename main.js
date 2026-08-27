@@ -25,9 +25,11 @@ let matchTime = 0;
 let paused = false;
 
 window.addEventListener('keydown', (e) => {
-  console.log('Key down:', e.code, '- Setting keys[' + e.code + '] = true');
+  const before = keys[e.code];
   keys[e.code] = true;
-  console.log('Keys object after set:', JSON.stringify(keys));
+  const after = keys[e.code];
+  console.log('Key down:', e.code, '| Before:', before, '→ After:', after, '| Verified:', keys[e.code] === true);
+  
   if (e.code === 'KeyP') togglePause();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
@@ -624,3 +626,16 @@ function animate() {
 }
 
 animate();
+
+window.testMovement = function() {
+  console.log('=== MANUAL TEST ===');
+  console.log('Setting keys.KeyW = true for 3 seconds...');
+  keys['KeyW'] = true;
+  console.log('keys.KeyW is now:', keys['KeyW']);
+  setTimeout(() => {
+    console.log('3 seconds elapsed, clearing keys.KeyW');
+    keys['KeyW'] = false;
+    console.log('Test complete. Did player move?');
+  }, 3000);
+};
+console.log('Test function available: testMovement() - sets W key for 3 seconds');
