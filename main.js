@@ -24,7 +24,8 @@ let aiScore = 0;
 let matchTime = 0;
 let paused = false;
 
-window.addEventListener('keydown', (e) => { 
+window.addEventListener('keydown', (e) => {
+  console.log('Key down:', e.code);
   keys[e.code] = true;
   if (e.code === 'KeyP') togglePause();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
@@ -32,7 +33,8 @@ window.addEventListener('keydown', (e) => {
   }
 }, { passive: false });
 
-window.addEventListener('keyup', (e) => { 
+window.addEventListener('keyup', (e) => {
+  console.log('Key up:', e.code);
   keys[e.code] = false;
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
@@ -468,17 +470,21 @@ function updatePlayerControl(player, delta) {
   const force = new CANNON.Vec3();
   let moving = false;
   
-  if (keys['KeyW'] || keys['ArrowUp']) { force.z -= speed; moving = true; }
+  if (keys['KeyW'] || keys['ArrowUp']) { 
+    console.log('W key detected, applying force');
+    force.z -= speed; 
+    moving = true; 
+  }
   if (keys['KeyS'] || keys['ArrowDown']) { force.z += speed; moving = true; }
   if (keys['KeyA'] || keys['ArrowLeft']) { force.x -= speed; moving = true; }
   if (keys['KeyD'] || keys['ArrowRight']) { force.x += speed; moving = true; }
   
   if (force.length() > EPSILON) {
+    console.log('Applying force:', force, 'to position:', player.body.position);
     player.body.applyForce(force);
     player.mesh.rotation.y = Math.atan2(force.x, -force.z);
   }
   
-  console.log("Space key check:", keys["Space"], "keys object:", Object.keys(keys).filter(k => keys[k]));
   if (keys['Space']) {
     kickBall(player, keys['ShiftLeft'] || keys['ShiftRight'] ? 18 : 32);
   }
