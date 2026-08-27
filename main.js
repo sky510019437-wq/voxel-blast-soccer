@@ -27,31 +27,32 @@ let playerScore = 0;
 let aiScore = 0;
 let paused = false;
 let matchTime = 0;
-let pointerLocked = false;
+let gameStarted = false;
 
 window.addEventListener('keydown', (e) => { 
+  if (!gameStarted && (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space')) {
+    gameStarted = true;
+    document.getElementById('startHint').style.display = 'none';
+  }
   keys[e.code] = true; 
   if (e.code === 'KeyP') togglePause();
 });
+
 window.addEventListener('keyup', (e) => { 
   keys[e.code] = false;
 });
 
-document.addEventListener('pointerlockchange', () => {
-  pointerLocked = (document.pointerLockElement === canvas);
+canvas.addEventListener('click', () => {
+  if (!gameStarted) {
+    gameStarted = true;
+    document.getElementById('startHint').style.display = 'none';
+  }
+  canvas.requestPointerLock();
 });
 
 canvas.addEventListener('mousemove', (e) => {
-  if (pointerLocked) {
-    mouseAim += e.movementX * 0.003;
-  }
-});
-
-canvas.addEventListener('click', () => {
-  if (!pointerLocked) {
-    canvas.requestPointerLock();
-  } else {
-    kickBall();
+  if (document.pointerLockElement === canvas && e.movementX) {
+    mouseAim += e.movementX * 0.005;
   }
 });
 
@@ -620,7 +621,7 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   
-  if (!paused) {
+  if (!paused && gameStarted) {
     const delta = Math.min(clock.getDelta(), 0.033);
     matchTime += delta;
     
@@ -663,6 +664,8 @@ function animate() {
     const seconds = Math.floor(matchTime % 60);
     document.getElementById('time').textContent = 
       `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  } else if (gameStarted) {
+    clock.getDelta();
   }
   
   renderer.render(scene, camera);
