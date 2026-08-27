@@ -25,11 +25,7 @@ let matchTime = 0;
 let paused = false;
 
 window.addEventListener('keydown', (e) => {
-  const before = keys[e.code];
   keys[e.code] = true;
-  const after = keys[e.code];
-  console.log('Key down:', e.code, '| Before:', before, '→ After:', after, '| Verified:', keys[e.code] === true);
-  
   if (e.code === 'KeyP') togglePause();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
@@ -37,7 +33,6 @@ window.addEventListener('keydown', (e) => {
 }, { passive: false });
 
 window.addEventListener('keyup', (e) => {
-  console.log('Key up:', e.code);
   keys[e.code] = false;
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
@@ -469,22 +464,12 @@ function checkGoals() {
 }
 
 function updatePlayerControl(player, delta) {
-  if (!player || !player.body) {
-    console.error('Player or player.body is undefined!');
-    return;
-  }
+  if (!player || !player.body) return;
   
   const speed = 25;
   let moving = false;
   
-  console.log('updatePlayerControl - Before:', {
-    position: {x: player.body.position.x, z: player.body.position.z},
-    velocity: {x: player.body.velocity.x, z: player.body.velocity.z},
-    keysW: keys['KeyW']
-  });
-  
   if (keys['KeyW'] || keys['ArrowUp']) { 
-    console.log('W key detected, setting velocity.z to', -speed);
     player.body.velocity.z = -speed;
     moving = true; 
   } else if (keys['KeyS'] || keys['ArrowDown']) { 
@@ -503,11 +488,6 @@ function updatePlayerControl(player, delta) {
   } else {
     player.body.velocity.x *= 0.8;
   }
-  
-  console.log('updatePlayerControl - After:', {
-    position: {x: player.body.position.x, z: player.body.position.z},
-    velocity: {x: player.body.velocity.x, z: player.body.velocity.z}
-  });
   
   if (moving && player.mesh) {
     const dx = player.body.velocity.x;
@@ -566,17 +546,7 @@ function animate() {
     const delta = Math.min(clock.getDelta(), 0.033);
     matchTime += delta;
     
-    console.log('Animate loop - Before world.step, mainPlayer position:', {
-      x: mainPlayer.body.position.x,
-      z: mainPlayer.body.position.z
-    });
-    
     world.step(1/60, delta, 3);
-    
-    console.log('Animate loop - After world.step, mainPlayer position:', {
-      x: mainPlayer.body.position.x,
-      z: mainPlayer.body.position.z
-    });
     
     updatePlayerControl(mainPlayer, delta);
     
@@ -591,7 +561,6 @@ function animate() {
     
     [...playerTeam, ...aiTeam].forEach(p => {
       p.mesh.position.copy(p.body.position);
-      console.log('Copied position for player:', p.body.position.x, p.body.position.z);
     });
     
     debris.forEach((d, i) => {
