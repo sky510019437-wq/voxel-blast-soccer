@@ -21,6 +21,7 @@ world.defaultContactMaterial.friction = 0.3;
 world.defaultContactMaterial.restitution = 0.6;
 
 const VOXEL_SIZE = 0.5;
+const EPSILON = 0.001;
 
 const keys = {};
 const mouse = { x: 0, y: 0 };
@@ -203,7 +204,7 @@ function createPlayer(x, z, material) {
     }
   }
   
-  const shape = new CANNON.Cylinder(0.5, 0.5, 2, 8);
+  const shape = new CANNON.Box(new CANNON.Vec3(0.5, 1, 0.5));
   const body = new CANNON.Body({ mass: 10, shape });
   body.position.set(x, 1, z);
   body.linearDamping = 0.9;
@@ -327,7 +328,7 @@ function kickBall() {
   const dz = ballBody.position.z - player.body.position.z;
   const dist = Math.sqrt(dx * dx + dz * dz);
   
-  if (dist < 2) {
+  if (dist < 2 && dist > EPSILON) {
     const power = 25;
     const dirX = dx / dist;
     const dirZ = dz / dist;
@@ -402,29 +403,35 @@ function updateAI(delta) {
   const force = new CANNON.Vec3();
   
   if (ballBody.position.z > 0) {
-    force.x = (toBallX / distToBall) * speed;
-    force.z = (toBallZ / distToBall) * speed;
+    if (distToBall > EPSILON) {
+      force.x = (toBallX / distToBall) * speed;
+      force.z = (toBallZ / distToBall) * speed;
+    }
   } else {
     const toHomeX = 0 - ai.body.position.x;
     const toHomeZ = 10 - ai.body.position.z;
     const distToHome = Math.sqrt(toHomeX * toHomeX + toHomeZ * toHomeZ);
-    force.x = (toHomeX / distToHome) * speed * 0.5;
-    force.z = (toHomeZ / distToHome) * speed * 0.5;
+    if (distToHome > EPSILON) {
+      force.x = (toHomeX / distToHome) * speed * 0.5;
+      force.z = (toHomeZ / distToHome) * speed * 0.5;
+    }
   }
   
   ai.body.applyForce(force);
   
-  if (distToBall < 2 && ballBody.position.z > 5) {
+  if (distToBall < 2 && distToBall > EPSILON && ballBody.position.z > 5) {
     const toGoalX = 0 - ballBody.position.x;
     const toGoalZ = -14 - ballBody.position.z;
     const distToGoal = Math.sqrt(toGoalX * toGoalX + toGoalZ * toGoalZ);
-    ballBody.velocity.set(
-      (toGoalX / distToGoal) * 20,
-      5,
-      (toGoalZ / distToGoal) * 20
-    );
-    playSound('kick', 0.4);
-    cameraShake = 10;
+    if (distToGoal > EPSILON) {
+      ballBody.velocity.set(
+        (toGoalX / distToGoal) * 20,
+        5,
+        (toGoalZ / distToGoal) * 20
+      );
+      playSound('kick', 0.4);
+      cameraShake = 10;
+    }
   }
   
   ai.body.position.x = Math.max(-18, Math.min(18, ai.body.position.x));
@@ -463,15 +470,23 @@ function animate() {
       }
     });
     
+    let targetX = 0;
+    let targetY = 15;
+    let targetZ = 25;
+    
+    if (!isNaN(player.body.position.x) && !isNaN(player.body.position.z)) {
+      targetX = player.body.position.x * 0.3;
+      targetZ = player.body.position.z + 25;
+    }
+    
     if (cameraShake > 0) {
-      camera.position.x = Math.sin(Date.now() * 0.05) * cameraShake * 0.02;
-      camera.position.y = 15 + Math.cos(Date.now() * 0.03) * cameraShake * 0.02;
+      targetX += Math.sin(Date.now() * 0.05) * cameraShake * 0.02;
+      targetY += Math.cos(Date.now() * 0.03) * cameraShake * 0.02;
       cameraShake *= 0.9;
     }
     
-    const targetX = player.body.position.x * 0.3;
-    const targetZ = player.body.position.z + 25;
     camera.position.x += (targetX - camera.position.x) * 0.1;
+    camera.position.y += (targetY - camera.position.y) * 0.1;
     camera.position.z += (targetZ - camera.position.z) * 0.1;
     camera.lookAt(0, 0, 0);
   }
