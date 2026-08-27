@@ -32,6 +32,7 @@ window.addEventListener('keydown', (e) => {
   }
 }, { passive: false });
 
+
 window.addEventListener('keyup', (e) => {
   keys[e.code] = false;
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
@@ -471,7 +472,7 @@ function updatePlayerControl(player, delta) {
   
   if (keys['KeyW'] || keys['ArrowUp']) { 
     player.body.velocity.z = -speed;
-    moving = true; 
+    moving = true;
   } else if (keys['KeyS'] || keys['ArrowDown']) { 
     player.body.velocity.z = speed;
     moving = true; 
