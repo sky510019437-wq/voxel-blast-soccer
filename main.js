@@ -29,6 +29,7 @@ let paused = false;
 
 window.addEventListener('keydown', (e) => {
   keys[e.code] = true;
+  updateKeyIndicator();
   if (e.code === 'KeyP') togglePause();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
@@ -38,10 +39,19 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => {
   keys[e.code] = false;
+  updateKeyIndicator();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
   }
 }, { passive: false });
+
+function updateKeyIndicator() {
+  const pressed = Object.keys(keys).filter(k => keys[k]);
+  const indicator = document.getElementById('keyIndicator');
+  if (indicator) {
+    indicator.textContent = pressed.length > 0 ? `按键: ${pressed.join(' ')}` : '';
+  }
+}
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
