@@ -294,43 +294,17 @@ aiTeam.push(createPlayer(8, 25, 0x2196f3, 'AI3'));
 
 const mainPlayer = playerTeam[0];
 
-const ballRadius = 1.0;
-const ballMesh = new THREE.Group();
-
-const ballSphere = new THREE.Mesh(
+const ballRadius = 1.2;
+const ballMesh = new THREE.Mesh(
   new THREE.SphereGeometry(ballRadius, 32, 32),
-  new THREE.MeshStandardMaterial({ 
-    color: 0xffffff,
+  new THREE.MeshLambertMaterial({ 
+    color: 0xffff00,
     emissive: 0xffff00,
-    emissiveIntensity: 0.4,
-    metalness: 0.1,
-    roughness: 0.3
+    emissiveIntensity: 0.6
   })
 );
-ballSphere.castShadow = true;
-ballMesh.add(ballSphere);
-
-for (let i = 0; i < 12; i++) {
-  const panel = new THREE.Mesh(
-    new THREE.CircleGeometry(ballRadius * 0.18, 5),
-    new THREE.MeshBasicMaterial({ color: 0x000000 })
-  );
-  const phi = Math.acos(-1 + (2 * i) / 12);
-  const theta = Math.sqrt(12 * Math.PI) * phi;
-  panel.position.setFromSphericalCoords(ballRadius * 1.01, phi, theta);
-  panel.lookAt(0, 0, 0);
-  ballMesh.add(panel);
-}
-
-const haloGeo = new THREE.SphereGeometry(ballRadius * 1.4, 16, 16);
-const haloMat = new THREE.MeshBasicMaterial({ 
-  color: 0xffff00,
-  transparent: true,
-  opacity: 0.15,
-  side: THREE.BackSide
-});
-const halo = new THREE.Mesh(haloGeo, haloMat);
-ballMesh.add(halo);
+ballMesh.castShadow = true;
+scene.add(ballMesh);
 
 const ballBody = new CANNON.Body({ 
   mass: 0.45, 
@@ -338,9 +312,8 @@ const ballBody = new CANNON.Body({
   linearDamping: 0.05,
   angularDamping: 0.05
 });
-ballBody.position.set(0, ballRadius + 0.5, 0);
+ballBody.position.set(0, ballRadius + 1, 0);
 world.addBody(ballBody);
-scene.add(ballMesh);
 
 const debris = [];
 const MAX_DEBRIS = 100;
