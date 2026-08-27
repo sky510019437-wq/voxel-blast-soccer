@@ -466,13 +466,22 @@ function checkGoals() {
 }
 
 function updatePlayerControl(player, delta) {
+  if (!player || !player.body) {
+    console.error('Player or player.body is undefined!');
+    return;
+  }
+  
   const speed = 12;
   let moving = false;
   
-  console.log('updatePlayerControl called, keys.KeyW:', keys['KeyW']);
+  console.log('updatePlayerControl - Before:', {
+    position: {x: player.body.position.x, z: player.body.position.z},
+    velocity: {x: player.body.velocity.x, z: player.body.velocity.z},
+    keysW: keys['KeyW']
+  });
   
   if (keys['KeyW'] || keys['ArrowUp']) { 
-    console.log('W key detected, moving player');
+    console.log('W key detected, setting velocity.z to', -speed);
     player.body.velocity.z = -speed;
     moving = true; 
   } else if (keys['KeyS'] || keys['ArrowDown']) { 
@@ -492,6 +501,11 @@ function updatePlayerControl(player, delta) {
     player.body.velocity.x *= 0.8;
   }
   
+  console.log('updatePlayerControl - After:', {
+    position: {x: player.body.position.x, z: player.body.position.z},
+    velocity: {x: player.body.velocity.x, z: player.body.velocity.z}
+  });
+  
   if (moving && player.mesh) {
     const dx = player.body.velocity.x;
     const dz = player.body.velocity.z;
@@ -507,7 +521,7 @@ function updatePlayerControl(player, delta) {
   player.body.position.x = Math.max(-28, Math.min(28, player.body.position.x));
   player.body.position.z = Math.max(-44, Math.min(44, player.body.position.z));
   
-  if (moving) {
+  if (moving && player.legs) {
     const swing = Math.sin(Date.now() * 0.015) * 0.4;
     player.legs.left.rotation.x = swing;
     player.legs.right.rotation.x = -swing;
@@ -549,7 +563,17 @@ function animate() {
     const delta = Math.min(clock.getDelta(), 0.033);
     matchTime += delta;
     
+    console.log('Animate loop - Before world.step, mainPlayer position:', {
+      x: mainPlayer.body.position.x,
+      z: mainPlayer.body.position.z
+    });
+    
     world.step(1/60, delta, 3);
+    
+    console.log('Animate loop - After world.step, mainPlayer position:', {
+      x: mainPlayer.body.position.x,
+      z: mainPlayer.body.position.z
+    });
     
     updatePlayerControl(mainPlayer, delta);
     
@@ -564,6 +588,7 @@ function animate() {
     
     [...playerTeam, ...aiTeam].forEach(p => {
       p.mesh.position.copy(p.body.position);
+      console.log('Copied position for player:', p.body.position.x, p.body.position.z);
     });
     
     debris.forEach((d, i) => {
