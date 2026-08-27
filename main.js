@@ -466,23 +466,38 @@ function checkGoals() {
 }
 
 function updatePlayerControl(player, delta) {
-  const speed = 400;
-  const force = new CANNON.Vec3();
+  const speed = 12;
   let moving = false;
   
-  if (keys['KeyW'] || keys['ArrowUp']) { 
-    console.log('W key detected, applying force');
-    force.z -= speed; 
-    moving = true; 
-  }
-  if (keys['KeyS'] || keys['ArrowDown']) { force.z += speed; moving = true; }
-  if (keys['KeyA'] || keys['ArrowLeft']) { force.x -= speed; moving = true; }
-  if (keys['KeyD'] || keys['ArrowRight']) { force.x += speed; moving = true; }
+  console.log('updatePlayerControl called, keys.KeyW:', keys['KeyW']);
   
-  if (force.length() > EPSILON) {
-    console.log('Applying force:', force, 'to position:', player.body.position);
-    player.body.applyForce(force);
-    player.mesh.rotation.y = Math.atan2(force.x, -force.z);
+  if (keys['KeyW'] || keys['ArrowUp']) { 
+    console.log('W key detected, moving player');
+    player.body.velocity.z = -speed;
+    moving = true; 
+  } else if (keys['KeyS'] || keys['ArrowDown']) { 
+    player.body.velocity.z = speed;
+    moving = true; 
+  } else {
+    player.body.velocity.z *= 0.8;
+  }
+  
+  if (keys['KeyA'] || keys['ArrowLeft']) { 
+    player.body.velocity.x = -speed;
+    moving = true; 
+  } else if (keys['KeyD'] || keys['ArrowRight']) { 
+    player.body.velocity.x = speed;
+    moving = true; 
+  } else {
+    player.body.velocity.x *= 0.8;
+  }
+  
+  if (moving && player.mesh) {
+    const dx = player.body.velocity.x;
+    const dz = player.body.velocity.z;
+    if (Math.abs(dx) > 0.1 || Math.abs(dz) > 0.1) {
+      player.mesh.rotation.y = Math.atan2(dx, -dz);
+    }
   }
   
   if (keys['Space']) {
