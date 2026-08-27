@@ -26,6 +26,7 @@ let paused = false;
 
 window.addEventListener('keydown', (e) => {
   keys[e.code] = true;
+  updateDebugDisplay();
   if (e.code === 'KeyP') togglePause();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
@@ -34,10 +35,16 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => {
   keys[e.code] = false;
+  updateDebugDisplay();
   if (e.code.startsWith('Key') || e.code.startsWith('Arrow') || e.code === 'Space') {
     e.preventDefault();
   }
 }, { passive: false });
+
+function updateDebugDisplay() {
+  const pressed = Object.keys(keys).filter(k => keys[k]);
+  document.getElementById('debug').textContent = pressed.length ? 'Keys: ' + pressed.join(', ') : 'Keys: None';
+}
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -595,16 +602,3 @@ function animate() {
 }
 
 animate();
-
-window.testMovement = function() {
-  console.log('=== MANUAL TEST ===');
-  console.log('Setting keys.KeyW = true for 3 seconds...');
-  keys['KeyW'] = true;
-  console.log('keys.KeyW is now:', keys['KeyW']);
-  setTimeout(() => {
-    console.log('3 seconds elapsed, clearing keys.KeyW');
-    keys['KeyW'] = false;
-    console.log('Test complete. Did player move?');
-  }, 3000);
-};
-console.log('Test function available: testMovement() - sets W key for 3 seconds');

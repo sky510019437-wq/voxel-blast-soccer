@@ -88,6 +88,17 @@
     #pause:hover {
       background: rgba(0,0,0,0.9);
     }
+    #debug {
+      position: absolute;
+      bottom: 80px;
+      left: 20px;
+      background: rgba(255,0,0,0.9);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-family: monospace;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -104,6 +115,7 @@
       P - 暂停
     </div>
     <div id="pause">暂停 (P)</div>
+    <div id="debug">Keys: None</div>
     <div id="message"></div>
   </div>
   <script type="module" src="/main.js"></script>
