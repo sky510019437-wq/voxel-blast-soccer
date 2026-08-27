@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 
 const canvas = document.getElementById('canvas');
+canvas.setAttribute('tabindex', '0');
+canvas.focus();
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
@@ -45,6 +48,8 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+canvas.addEventListener('click', () => canvas.focus());
 
 function togglePause() {
   paused = !paused;
