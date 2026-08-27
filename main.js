@@ -467,7 +467,7 @@ function checkGoals() {
 function updatePlayerControl(player, delta) {
   if (!player || !player.body) return;
   
-  const speed = 25;
+  const speed = 80;
   let moving = false;
   
   if (keys['KeyW'] || keys['ArrowUp']) { 
