@@ -294,15 +294,17 @@ aiTeam.push(createPlayer(8, 25, 0x2196f3, 'AI3'));
 
 const mainPlayer = playerTeam[0];
 
-const ballRadius = 0.7;
+const ballRadius = 1.0;
 const ballMesh = new THREE.Group();
 
 const ballSphere = new THREE.Mesh(
-  new THREE.SphereGeometry(ballRadius, 24, 24),
+  new THREE.SphereGeometry(ballRadius, 32, 32),
   new THREE.MeshStandardMaterial({ 
     color: 0xffffff,
+    emissive: 0xffff00,
+    emissiveIntensity: 0.4,
     metalness: 0.1,
-    roughness: 0.4
+    roughness: 0.3
   })
 );
 ballSphere.castShadow = true;
@@ -319,6 +321,16 @@ for (let i = 0; i < 12; i++) {
   panel.lookAt(0, 0, 0);
   ballMesh.add(panel);
 }
+
+const haloGeo = new THREE.SphereGeometry(ballRadius * 1.4, 16, 16);
+const haloMat = new THREE.MeshBasicMaterial({ 
+  color: 0xffff00,
+  transparent: true,
+  opacity: 0.15,
+  side: THREE.BackSide
+});
+const halo = new THREE.Mesh(haloGeo, haloMat);
+ballMesh.add(halo);
 
 const ballBody = new CANNON.Body({ 
   mass: 0.45, 
